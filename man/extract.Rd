@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 % Time-stamp: <2009-07-14 17:21:02 (bjw34032)>
-% $Id: extract.Rd 191 2009-08-25 15:12:31Z bjw34032 $
+% $Id: extract.Rd 55 2009-08-04 16:20:22Z bjw34032 $
 
 \name{Seed Growing for a 4D Array}
 \alias{extract.aif}

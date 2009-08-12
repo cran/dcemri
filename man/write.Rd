@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: write.Rd 191 2009-08-25 15:12:31Z bjw34032 $
+% $Id: write.Rd 115 2009-08-12 16:27:14Z bjw34032 $
 
 \name{Write Output as Analyze/NIfTI}
 \alias{write.analyze.img}
@@ -59,8 +59,8 @@ write.nifti.img(fname, hdr, img, type, gzipped=TRUE, warn=-1)
 \examples{
 norm <- dnorm(seq(-5, 5, length=32), sd=2)
 norm <- (norm-min(norm)) / max(norm-min(norm))
-img <- outer(outer(norm, norm), norm)
-img <- round(255*img)
+img <- norm \%o\% norm \%o\% norm
+img <- round(img*255)
 img[17:32,,] <- 255 - img[17:32,,]
 X <- nrow(img)
 Y <- ncol(img)

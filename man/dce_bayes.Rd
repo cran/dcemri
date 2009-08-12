@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: dce_bayes.Rd 191 2009-08-25 15:12:31Z bjw34032 $
+% $Id: dce_bayes.Rd 115 2009-08-12 16:27:14Z bjw34032 $
 
 \name{dcemri.bayes}
 \alias{dcemri.bayes}
@@ -14,12 +14,12 @@
 }
 \usage{
 dcemri.bayes(conc, time, img.mask, model="extended", aif=NULL,
-             user=NULL, nriters=3500, thin=3, burnin=500,
+             user=NULL, nriters=9500, thin=30, burnin=2000,
              tune=267, tau.ktrans=1, tau.kep=tau.ktrans,
              ab.vp=c(1,19), ab.tauepsilon=c(1,1/1000),
              samples=FALSE, multicore=FALSE, verbose=FALSE, ...)
-dcemri.bayes.single(conc, time, nriters=3500, thin=3,
-                    burnin=500, tune=267, tau.gamma=1,
+dcemri.bayes.single(conc, time, nriters=7000, thin=10,
+                    burnin=2000, tune=267, tau.gamma=1,
                     tau.theta=1, ab.vp=c(1,19),
                     ab.tauepsilon=c(1,1/1000), aif.model=0,
                     aif.parameter=c(2.4,0.62,3,0.016), vp=1)
@@ -100,8 +100,7 @@ dcemri.bayes.single(conc, time, nriters=3500, thin=3,
     on Medical Imaging}, \bold{25} (12), 1627-1636.
 }
 \seealso{
-  \code{\link{dcemri.lm}}, \code{\link{dcemri.map}},
-  \code{\link{dcemri.spline}}
+  \code{\link{dcemri.lm}}, \code{\link{dcemri.spline}}
 }
 \examples{
 data("buckley")
@@ -111,14 +110,15 @@ mask <- array(TRUE, dim(img)[1:3])
 time <- buckley$time.min[xi]
 
 ## Bayesian estimation with Fritz-Hansen default AIF
-fit.bayes <- dcemri.bayes(img, time, mask, aif="fritz.hansen", nriters=1500)
+fit.bayes <- dcemri.bayes(img, time, mask, aif="fritz.hansen",
+                          nriters=5000)
 
 ## Bayesian estimation with "orton.exp" function fit to Buckley's AIF
 aif <- buckley$input[xi]
 aifparams <- orton.exp.lm(time, aif)
 aifparams$D <- 1
 fit.bayes.aif <- dcemri.bayes(img, time, mask, model="orton.exp",
-                              aif="user", user=aifparams, nriters=1500)
+                              aif="user", user=aifparams, nriters=5000)
 
 plot(breast$ktrans, fit.bayes$ktrans, xlim=c(0,1), ylim=c(0,1),
      xlab=expression(paste("True ", K^{trans})),

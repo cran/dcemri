@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: dcemri.Rd 191 2009-08-25 15:12:31Z bjw34032 $
+% $Id: dcemri.Rd 112 2009-08-12 13:34:53Z bjw34032 $
 
 \name{dcemri.lm}
 \alias{dcemri.lm}
@@ -127,8 +127,8 @@ Fritz-Hansen, T., Rostrup, E., Larsson, H.B.W, Sondergaard, L., Ring,
     NMR}, \bold{16}, 167-172. 
 }
 \seealso{
-  \code{\link{dcemri.bayes}}, \code{\link{dcemri.map}},
-  \code{\link{dcemri.spline}}, \code{\link[minpack.lm]{nls.lm}}
+  \code{\link{dcemri.bayes}}, \code{\link{dcemri.spline}},
+  \code{\link[minpack.lm]{nls.lm}}
 }
 \examples{
 data("buckley")

@@ -1,5 +1,5 @@
 
-R version 2.9.2 (2009-08-24)
+R version 2.9.1 (2009-06-26)
 Copyright (C) 2009 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -86,6 +86,7 @@ Type 'q()' to quit R.
 > options(contrasts = c(unordered = "contr.treatment", ordered = "contr.poly"))
 > options(warn = 1)
 > library('dcemri')
+Loading required package: splines
 > 
 > assign(".oldSearch", search(), pos = 'CheckExEnv')
 > assign(".oldNS", loadedNamespaces(), pos = 'CheckExEnv')
@@ -170,7 +171,6 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > 
 > par(mfrow=c(2,2))  ## graphic output
 > image(drop(tkernel), col=tim.colors(), main="Template")
-Loading required package: splines
 > image(drop(cube), col=tim.colors(), main="Target")
 > image(drop(out), col=tim.colors(), main="Output")
 > 
@@ -197,7 +197,8 @@ Loading required package: splines
 > time <- buckley$time.min[xi]
 > 
 > ## Bayesian estimation with Fritz-Hansen default AIF
-> fit.bayes <- dcemri.bayes(img, time, mask, aif="fritz.hansen", nriters=1500)
+> fit.bayes <- dcemri.bayes(img, time, mask, aif="fritz.hansen",
++                           nriters=5000)
 > 
 > ## Bayesian estimation with "orton.exp" function fit to Buckley's AIF
 > aif <- buckley$input[xi]
@@ -212,7 +213,7 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 
 > aifparams$D <- 1
 > fit.bayes.aif <- dcemri.bayes(img, time, mask, model="orton.exp",
-+                               aif="user", user=aifparams, nriters=1500)
++                               aif="user", user=aifparams, nriters=5000)
 > 
 > plot(breast$ktrans, fit.bayes$ktrans, xlim=c(0,1), ylim=c(0,1),
 +      xlab=expression(paste("True ", K^{trans})),
@@ -223,19 +224,19 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > 
 > cbind(breast$ktrans, fit.bayes$ktrans[,,1], fit.bayes.aif$ktrans[,,1])
              [,1]      [,2]       [,3]
- [1,] 0.145599052 0.3825420 0.55301691
- [2,] 0.218344559 0.5926812 0.50283293
- [3,] 0.250521815 0.6937199 0.48814051
- [4,] 0.268391926 0.7503174 0.48075811
- [5,] 0.279725126 0.7898344 0.47578505
- [6,] 0.009912791 0.4444399 0.08879913
- [7,] 0.146992146 0.4637267 0.47316995
- [8,] 0.328712966 0.8659768 0.49740757
- [9,] 0.387767110 0.9748638 0.50357483
-[10,] 0.250521815 0.5505262 0.45806535
-[11,] 0.250521815 0.6171508 0.47258938
-[12,] 0.250521815 0.7666502 0.50664579
-[13,] 0.250521815 0.8382163 0.52444152
+ [1,] 0.145599052 0.3822529 0.55155972
+ [2,] 0.218344559 0.5941660 0.50998853
+ [3,] 0.250521815 0.6915965 0.50363972
+ [4,] 0.268391926 0.7544241 0.50162013
+ [5,] 0.279725126 0.7906471 0.49858131
+ [6,] 0.009912791 0.5278200 0.08219553
+ [7,] 0.146992146 0.4697578 0.46837004
+ [8,] 0.328712966 0.8607315 0.51101895
+ [9,] 0.387767110 0.9757291 0.51354276
+[10,] 0.250521815 0.5502301 0.45798719
+[11,] 0.250521815 0.6203777 0.48055667
+[12,] 0.250521815 0.7686921 0.52586198
+[13,] 0.250521815 0.8462243 0.55142495
 > 
 > ## Not run: 
 > ##D fit.lm <- dcemri.lm(img, time, mask, aif="fritz.hansen")
@@ -253,47 +254,6 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > ##D                         "Bayesian Estimation (orton.exp)",
 > ##D                         "Levenburg-Marquardt (fritz.hansen)",
 > ##D                         "Levenburg-Marquardt (orton.exp)"), pch=1:4)
-> ## End(Not run)
-> 
-> 
-> 
-> cleanEx(); nameEx("dce_map")
-> ### * dce_map
-> 
-> flush(stderr()); flush(stdout())
-> 
-> ### Name: dcemri.map
-> ### Title: Pharmacokinetic Modeling of Dynamic Contrast-Enhanced MRI Data
-> ### Aliases: dcemri.map dcemri.map.single
-> ### Keywords: models
-> 
-> ### ** Examples
-> 
-> data("buckley")
-> xi <- seq(5, 300, by=5)
-> img <- array(t(breast$data)[,xi], c(13,1,1,60))
-> mask <- array(TRUE, dim(img)[1:3])
-> time <- buckley$time.min[xi]
-> 
-> ## MAP estimation with Fritz-Hansen default AIF
-> fit.map <- dcemri.map(img, time, mask, aif="fritz.hansen",
-+                       nriters=5000)
-> 
-> plot(breast$ktrans, fit.map$ktrans, xlim=c(0,1), ylim=c(0,1),
-+      xlab=expression(paste("True ", K^{trans})),
-+      ylab=expression(paste("Estimated ", K^{trans}, " (MAP)")))
-> abline(0, 1, lwd=1.5, col=2)
-> 
-> ## Not run: 
-> ##D fit.lm <- dcemri.lm(img, time, mask, aif="fritz.hansen")
-> ##D 
-> ##D plot(breast$ktrans, fit.map$ktrans, xlim=c(0,1), ylim=c(0,1),
-> ##D      xlab=expression(paste("True ", K^{trans})),
-> ##D      ylab=expression(paste("Estimated ", K^{trans})))
-> ##D points(breast$ktrans, fit.lm$ktrans, pch=3)
-> ##D abline(0, 1, lwd=1.5, col="red")
-> ##D legend("bottomright", c("MAP Estimation (fritz-hansen)",
-> ##D                         "Levenburg-Marquardt (fritz.hansen)", pch=c(1,3))
 > ## End(Not run)
 > 
 > 
@@ -318,10 +278,7 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > 
 > ## Generate AIF params using the orton.exp function from Buckley's AIF
 > aif <- buckley$input[xi]
-> 
-> fit.spline <- dcemri.spline(img, time, mask, aif="fritz.hansen",
-+                             nriters=250, nlr=TRUE)
-Loading required package: splines
+> aifparams <- orton.exp.lm(time, aif)
 Loading required package: minpack.lm
 
 This product includes software developed by the University of Chicago, as
@@ -330,8 +287,13 @@ Operator of Argonne National Laboratory.
 See the LICENSE file distributed with the minpack.lm source code or
 http://www.netlib.org/minpack/disclaimer for the full license.
 
+> aif.fit <- aif.orton.exp(time, aifparams$AB, aifparams$muB,
++                          aifparams$AG, aifparams$muG)
+> 
+> fit.spline <- dcemri.spline(img, time, mask, aif="fritz.hansen",
++                             nriters=250, nlr=TRUE)
 > fit.spline.aif <- dcemri.spline(img, time, mask, aif="observed",
-+                                 aif.observed=aif, nriters=250,
++                                 aif.observed=aif.fit, nriters=250,
 +                                 nlr=TRUE)
 > 
 > plot(breast$ktrans, fit.spline$ktrans, xlim=c(0,1), ylim=c(0,1),
@@ -339,23 +301,23 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 +      ylab=expression(paste("Estimated ", K^{trans})))
 > points(breast$ktrans, fit.spline.aif$ktrans, pch=2)
 > abline(0, 1, lwd=1.5, col="red")
-> legend("right", c("fritz.hansen", "observed"), pch=1:2)
+> legend("right", c("fritz.hansen", "orton.exp"), pch=1:2)
 > 
 > cbind(breast$ktrans, fit.spline$ktrans[,,1], fit.spline.aif$ktrans[,,1])
              [,1]      [,2]      [,3]
- [1,] 0.145599052 0.3732351 0.1603747
- [2,] 0.218344559 0.5735669 0.2590044
- [3,] 0.250521815 0.6701396 0.3124136
- [4,] 0.268391926 0.7268552 0.3456465
- [5,] 0.279725126 0.7641296 0.3697997
- [6,] 0.009912791 0.4262028 0.4073166
- [7,] 0.146992146 0.4773769 0.2195387
- [8,] 0.328712966 0.7977763 0.3770913
- [9,] 0.387767110 0.8886958 0.4236747
-[10,] 0.250521815 0.5185484 0.2309963
-[11,] 0.250521815 0.5947862 0.2703911
-[12,] 0.250521815 0.7438540 0.3534772
-[13,] 0.250521815 0.8142022 0.3913599
+ [1,] 0.145599052 0.3732351 0.1536529
+ [2,] 0.218344559 0.5735669 0.2443917
+ [3,] 0.250521815 0.6701396 0.2918567
+ [4,] 0.268391926 0.7268552 0.3215880
+ [5,] 0.279725126 0.7641296 0.3419736
+ [6,] 0.009912791 0.4262028 0.2682752
+ [7,] 0.146992146 0.4773769 0.2056280
+ [8,] 0.328712966 0.7977763 0.3522021
+ [9,] 0.387767110 0.8886958 0.3949736
+[10,] 0.250521815 0.5185484 0.2193122
+[11,] 0.250521815 0.5947862 0.2553814
+[12,] 0.250521815 0.7438540 0.3288902
+[13,] 0.250521815 0.8142022 0.3627449
 > 
 > 
 > 
@@ -542,7 +504,6 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > ### ** Examples
 > 
 > hotmetal(10) 
-Loading required package: splines
  [1] "#010000" "#4C0000" "#960000" "#E00000" "#FF2C00" "#FF7600" "#FFC100"
  [8] "#FFFF12" "#FFFF81" "#FFFFF1"
 > image(outer(1:20,1:20,"+"), col=hotmetal(75), main="hotmetal")
@@ -587,17 +548,17 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > lines(time, curve.bayes, col="blue")
 > cbind(time, img[3,1,1,], curve.lm, curve.bayes)[20:30,]
           time           curve.lm curve.bayes
- [1,] 1.650000 0.775142 0.7662219   0.7662279
- [2,] 1.733333 0.778938 0.7701721   0.7701958
- [3,] 1.816667 0.782176 0.7737276   0.7737695
- [4,] 1.900000 0.784939 0.7769461   0.7770065
- [5,] 1.983333 0.787302 0.7798738   0.7799529
- [6,] 2.066667 0.789326 0.7825480   0.7826457
- [7,] 2.150000 0.791067 0.7849987   0.7851148
- [8,] 2.233333 0.792571 0.7872505   0.7873846
- [9,] 2.316667 0.793878 0.7893233   0.7894753
-[10,] 2.400000 0.795021 0.7912340   0.7914034
-[11,] 2.483333 0.796029 0.7929963   0.7931827
+ [1,] 1.650000 0.775142 0.7662219   0.7662105
+ [2,] 1.733333 0.778938 0.7701721   0.7702036
+ [3,] 1.816667 0.782176 0.7737276   0.7738009
+ [4,] 1.900000 0.784939 0.7769461   0.7770601
+ [5,] 1.983333 0.787302 0.7798738   0.7800275
+ [6,] 2.066667 0.789326 0.7825480   0.7827403
+ [7,] 2.150000 0.791067 0.7849987   0.7852285
+ [8,] 2.233333 0.792571 0.7872505   0.7875166
+ [9,] 2.316667 0.793878 0.7893233   0.7896248
+[10,] 2.400000 0.795021 0.7912340   0.7915696
+[11,] 2.483333 0.796029 0.7929963   0.7933650
 > 
 > 
 > 
@@ -636,7 +597,6 @@ http://www.netlib.org/minpack/disclaimer for the full license.
 > ### ** Examples
 > 
 > tim.colors(10) 
-Loading required package: splines
  [1] "#00008F" "#0000FF" "#0070FF" "#00DFFF" "#50FFAF" "#BFFF40" "#FFCF00"
  [8] "#FF6000" "#EF0000" "#800000"
 > image(outer(1:20, 1:20, "+"), col=tim.colors(75), main="tim.colors")
@@ -657,8 +617,8 @@ Loading required package: splines
 > 
 > norm <- dnorm(seq(-5, 5, length=32), sd=2)
 > norm <- (norm-min(norm)) / max(norm-min(norm))
-> img <- outer(outer(norm, norm), norm)
-> img <- round(255*img)
+> img <- norm %o% norm %o% norm
+> img <- round(img*255)
 > img[17:32,,] <- 255 - img[17:32,,]
 > X <- nrow(img)
 > Y <- ncol(img)
@@ -715,7 +675,7 @@ Loading required package: bitops
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  91.647 0.325 93.277 0 0 
+Time elapsed:  107.747 0.49 109.591 0 0 
 > grDevices::dev.off()
 null device 
           1 

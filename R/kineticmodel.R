@@ -30,7 +30,7 @@
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ##
 ##
-## $Id: kineticmodel.R 191 2009-08-25 15:12:31Z bjw34032 $
+## $Id: $
 
 kineticModel <- function(time, par, model="extended", aif="fritz.hansen") {
 
