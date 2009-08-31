@@ -32,6 +32,7 @@
 ##
 
 tim.colors <- function(n=64) {
+  require("splines")
   ## tims original 64 color definition definition:
   
   orig <- c("#00008F", "#00009F", "#0000AF", "#0000BF",

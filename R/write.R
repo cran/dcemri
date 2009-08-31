@@ -30,7 +30,7 @@
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
 ##
-## Time-stamp: <>
+## $Id: write.R 241 2009-09-02 07:29:13Z bjw34032 $
 ##
 
 write.analyze.img <- function(fname, hdr, img, type, gzipped=TRUE, warn=-1) {
@@ -174,7 +174,8 @@ write.analyze.img <- function(fname, hdr, img, type, gzipped=TRUE, warn=-1) {
   invisible()
 }
 
-write.nifti.img <- function(fname, hdr, img, type, gzipped=TRUE, warn=-1) {
+write.nifti.img <- function(fname, hdr, img, type, gzipped=TRUE, warn=-1,
+                            ignoreQform=FALSE, ignoreSform=FALSE) {
   ## Warnings?
   oldwarn <- options()$warn
   options(warn=warn)
@@ -319,11 +320,11 @@ write.nifti.img <- function(fname, hdr, img, type, gzipped=TRUE, warn=-1) {
   writeBin(hdr$extender, fid, endian=hdr$endian, size=1)
 
   ## Write image file...
-  if (hdr$qform.code > 0) {
+  if (hdr$qform.code > 0 && !ignoreQform) {
     # if (verbose)
     stop("NIfTI-1: qform_code > 0")
   }
-  if (hdr$sform.code > 0) {
+  if (hdr$sform.code > 0 && !ignoreSform) {
     # if (verbose)
     print("NIfTI-1: sform_code > 0")
     x <- (1:hdr$dim[2] - hdr$srow.x[4]) / hdr$srow.x[1]

@@ -30,7 +30,7 @@
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
 ##
-## $Id: dcemri.R 56 2009-08-04 16:26:21Z bjw34032 $
+## $Id: dcemri_lm.R 191 2009-08-25 15:12:31Z bjw34032 $
 ##
 
 dcemri.lm <- function(conc, time, img.mask, model="extended", aif=NULL,

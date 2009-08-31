@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: write.Rd 115 2009-08-12 16:27:14Z bjw34032 $
+% $Id: write.Rd 241 2009-09-02 07:29:13Z bjw34032 $
 
 \name{Write Output as Analyze/NIfTI}
 \alias{write.analyze.img}
@@ -14,7 +14,8 @@
 }
 \usage{
 write.analyze.img(fname, hdr, img, type, gzipped=TRUE, warn=-1)
-write.nifti.img(fname, hdr, img, type, gzipped=TRUE, warn=-1)
+write.nifti.img(fname, hdr, img, type, gzipped=TRUE, warn=-1,
+                ignoreQform=FALSE, ignoreSform=FALSE)
 }
 \arguments{
   \item{fname}{is the pathname to save the Analzye pair (.img and .hdr)
@@ -28,13 +29,17 @@ write.nifti.img(fname, hdr, img, type, gzipped=TRUE, warn=-1)
     compressed (.gz) files (default = \code{TRUE}).}
   \item{warn}{is a number to regulate the display of warnings (default =
     -1).  See \code{\link{options}} for more details.}
+  \item{ignoreQform}{is a logical variable (default = \code{FALSE}) that
+    ignores any \sQuote{qform} infomration in the NIfTI header.}
+  \item{ignoreSform}{is a logical variable (default = \code{FALSE}) that
+    ignores any \sQuote{sform} infomration in the NIfTI header.}
 }
 \details{
   Both functions utilize the internal \code{writeBin} and
   \code{writeChar} command to write infromation to a binary file.
 
   Current acceptable data types include
-  \itemize{
+  \describe{
     \item{\dQuote{uint1}}{DT BINARY (1 bit per voxel)}
     \item{\dQuote{uint8}}{DT UNSIGNED CHAR (8 bits per voxel)}
     \item{\dQuote{int16}}{DT SIGNED SHORT (16 bits per voxel)}
@@ -59,8 +64,8 @@ write.nifti.img(fname, hdr, img, type, gzipped=TRUE, warn=-1)
 \examples{
 norm <- dnorm(seq(-5, 5, length=32), sd=2)
 norm <- (norm-min(norm)) / max(norm-min(norm))
-img <- norm \%o\% norm \%o\% norm
-img <- round(img*255)
+img <- outer(outer(norm, norm), norm)
+img <- round(255*img)
 img[17:32,,] <- 255 - img[17:32,,]
 X <- nrow(img)
 Y <- ncol(img)

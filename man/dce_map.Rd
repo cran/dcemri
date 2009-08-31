@@ -1,34 +1,29 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: dce_bayes.Rd 205 2009-08-26 13:57:14Z bjw34032 $
+% $Id: dce_map.Rd 191 2009-08-25 15:12:31Z bjw34032 $
 
-\name{dcemri.bayes}
-\alias{dcemri.bayes}
-\alias{dcemri.bayes.single}
-\title{Bayesian Methods for Pharmacokinetic Modeling of Dynamic
-  Contrast-Enhanced MRI Data}
+\name{dcemri.map}
+\alias{dcemri.map}
+\alias{dcemri.map.single}
+\title{Pharmacokinetic Modeling of Dynamic Contrast-Enhanced MRI Data}
 \description{
-  Bayesian analysis of contrast agent concentration time curves from
-  DCE-MRI.
+  Maximum-a-posteriori (MAP) estimation for single compartment models is
+  performed using literature-based or user-specified arterial input
+  functions.
 }
 \usage{
-dcemri.bayes(conc, time, img.mask, model="extended", aif=NULL,
-             user=NULL, nriters=3500, thin=3, burnin=500,
-             tune=267, tau.ktrans=1, tau.kep=tau.ktrans,
+dcemri.map(conc, time, img.mask, model="extended", aif=NULL,
+             user=NULL, tau.ktrans=1, tau.kep=tau.ktrans,
              ab.vp=c(1,19), ab.tauepsilon=c(1,1/1000),
              samples=FALSE, multicore=FALSE, verbose=FALSE, ...)
-dcemri.bayes.single(conc, time, nriters=3500, thin=3,
-                    burnin=500, tune=267, tau.gamma=1,
-                    tau.theta=1, ab.vp=c(1,19),
-                    ab.tauepsilon=c(1,1/1000), aif.model=0,
-                    aif.parameter=c(2.4,0.62,3,0.016), vp=1)
+dcemri.map.single(conc, time, posterior, parameter, transform, start, hyper, aif)
 }
 \arguments{
   \item{conc}{Matrix or array of concentration time series (last
     dimension must be time).}
   \item{time}{Time in minutes.}
-  \item{img.mask}{Mask matrix or array. Voxels with mask=0 will be
+  \item{img.mask}{Mask matrix or array. Voxels with \code{mask=0} will be
     excluded.}
   \item{model}{is a character string that identifies the type of
     compartmental model to be used.  Acceptable models include:
@@ -37,8 +32,6 @@ dcemri.bayes.single(conc, time, nriters=3500, thin=3,
 	compartment model}
       \item{\dQuote{extended}}{Weinmann model extended with additional
 	vascular compartment (default)}
-      \item{\dQuote{orton.exp}}{Extended model using Orton's exponential
-	AIF}
     }
   }
   \item{aif}{is a character string that identifies the parameters of the
@@ -50,11 +43,6 @@ dcemri.bayes.single(conc, time, nriters=3500, thin=3,
   \item{user}{Vector of AIF parameters.  For Tofts and Kermode:
     \eqn{a_1}, \eqn{m_1}, \eqn{a_2}, \eqn{m_2}; for Orton \emph{et al.}:
     \eqn{A_b}, \eqn{\mu_b}, \eqn{A_g}, \eqn{\mu_g}.}
-  \item{nriters}{Total number of iterations.}
-  \item{thin}{Thining factor.}
-  \item{burnin}{Number of iterations for burn-in.}
-  \item{tune}{Number for iterations for tuning.  The algorithm will be 
-    tuned to an acceptance rate between 0.3 and 0.6.}
   \item{tau.ktrans}{Variance parameter for prior on
     \eqn{\log(K^{trans})}.}
   \item{tau.kep}{Variance parameter for prior on \eqn{\log(k_{ep})}.}
@@ -67,27 +55,26 @@ dcemri.bayes.single(conc, time, nriters=3500, thin=3,
   \item{multicore}{If \code{TRUE} algorithm is parallelized using
     \pkg{multicore}.}
   \item{verbose}{}
-  \item{tau.gamma}{}
-  \item{tau.theta}{}
-  \item{aif.model}{}
-  \item{aif.parameter}{}
-  \item{vp}{}
   \item{...}{}
+  \item{posterior}{}
+  \item{parameter}{}
+  \item{transform}{}
+  \item{start}{}
+  \item{hyper}{}
+  aif
 }
 \details{
-  See Schmid \emph{et al.} (2006) for details.
+  Implements maximum-a-posteriori (MAP) estimation for the Bayesian
+  model in Schmid \emph{et al.} (2006).
 }
 \value{
   Parameter estimates and their standard errors are provided for the
   masked region of the multidimensional array.  They include
   \item{ktrans}{Transfer rate from plasma to the extracellular,
     extravascular space (EES).}
-  \item{ktranserror}{Error on \eqn{K^{trans}}{ktrans}.}
   \item{kep}{Rate parameter for transport from the EES to plasma.}
-  \item{keperror}{Error on \eqn{k_{ep}}{kep}.}
   \item{ve}{Fractional occupancy by EES (the ratio between ktrans and
     kep).}
-  \item{vperror}{Error on \eqn{v_e}{ve}.}
   \item{vp}{Fractional occupancy by plasma.}
   \item{sigma2}{The residual sum-of-squares from the model fit.}
   \item{time}{Acquisition times (for plotting purposes).}
@@ -100,8 +87,7 @@ dcemri.bayes.single(conc, time, nriters=3500, thin=3,
     on Medical Imaging}, \bold{25} (12), 1627-1636.
 }
 \seealso{
-  \code{\link{dcemri.lm}}, \code{\link{dcemri.map}},
-  \code{\link{dcemri.spline}}
+  \code{\link{dcemri.lm}}, \code{\link{dcemri.bayes}}
 }
 \examples{
 data("buckley")
@@ -110,41 +96,25 @@ img <- array(t(breast$data)[,xi], c(13,1,1,60))
 mask <- array(TRUE, dim(img)[1:3])
 time <- buckley$time.min[xi]
 
-## Bayesian estimation with Fritz-Hansen default AIF
-fit.bayes <- dcemri.bayes(img, time, mask, aif="fritz.hansen", nriters=1500)
+## MAP estimation with Fritz-Hansen default AIF
+fit.map <- dcemri.map(img, time, mask, aif="fritz.hansen",
+                      nriters=5000)
 
-## Bayesian estimation with "orton.exp" function fit to Buckley's AIF
-aif <- buckley$input[xi]
-aifparams <- orton.exp.lm(time, aif)
-aifparams$D <- 1
-fit.bayes.aif <- dcemri.bayes(img, time, mask, model="orton.exp",
-                              aif="user", user=aifparams, nriters=1500)
-
-plot(breast$ktrans, fit.bayes$ktrans, xlim=c(0,1), ylim=c(0,1),
+plot(breast$ktrans, fit.map$ktrans, xlim=c(0,1), ylim=c(0,1),
      xlab=expression(paste("True ", K^{trans})),
-     ylab=expression(paste("Estimated ", K^{trans}, " (Bayesian)")))
-points(breast$ktrans, fit.bayes.aif$ktrans, pch=2)
+     ylab=expression(paste("Estimated ", K^{trans}, " (MAP)")))
 abline(0, 1, lwd=1.5, col=2)
-legend("right", c("orton.exp", "fritz.hansen"), pch=1:2)
-
-cbind(breast$ktrans, fit.bayes$ktrans[,,1], fit.bayes.aif$ktrans[,,1])
 
 \dontrun{
 fit.lm <- dcemri.lm(img, time, mask, aif="fritz.hansen")
-fit.lm.aif <- dcemri.lm(img, time, mask, model="orton.exp", aif="user",
-                        user=aifparams)
 
-plot(breast$ktrans, fit.bayes$ktrans, xlim=c(0,1), ylim=c(0,1),
+plot(breast$ktrans, fit.map$ktrans, xlim=c(0,1), ylim=c(0,1),
      xlab=expression(paste("True ", K^{trans})),
      ylab=expression(paste("Estimated ", K^{trans})))
-points(breast$ktrans, fit.bayes.aif$ktrans, pch=2)
 points(breast$ktrans, fit.lm$ktrans, pch=3)
-points(breast$ktrans, fit.lm.aif$ktrans, pch=4)
 abline(0, 1, lwd=1.5, col="red")
-legend("bottomright", c("Bayesian Estimation (fritz-hansen)",
-                        "Bayesian Estimation (orton.exp)",
-                        "Levenburg-Marquardt (fritz.hansen)",
-                        "Levenburg-Marquardt (orton.exp)"), pch=1:4)
+legend("bottomright", c("MAP Estimation (fritz-hansen)",
+                        "Levenburg-Marquardt (fritz.hansen)", pch=c(1,3))
 }
 }
 \author{Volker Schmid}

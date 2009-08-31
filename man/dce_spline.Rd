@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: dce_spline.Rd 115 2009-08-12 16:27:14Z bjw34032 $
+% $Id: dce_spline.Rd 205 2009-08-26 13:57:14Z bjw34032 $
 
 \name{dcemri.spline}
 \alias{dcemri.spline}
@@ -82,7 +82,8 @@ dcemri.spline.single(conc, time, D, time.input, p, rw, knots, k,
     Transactions on Medical Imaging}, \bold{28} (6), 789-798.
 }
 \seealso{
-  \code{\link{dcemri.lm}}, \code{\link{dcemri.bayes}}
+  \code{\link{dcemri.bayes}}, \code{\link{dcemri.lm}},
+  \code{\link{dcemri.map}}
 }
 \examples{
 data("buckley")
@@ -93,14 +94,11 @@ time <- buckley$time.min[xi]
 
 ## Generate AIF params using the orton.exp function from Buckley's AIF
 aif <- buckley$input[xi]
-aifparams <- orton.exp.lm(time, aif)
-aif.fit <- aif.orton.exp(time, aifparams$AB, aifparams$muB,
-                         aifparams$AG, aifparams$muG)
 
 fit.spline <- dcemri.spline(img, time, mask, aif="fritz.hansen",
                             nriters=250, nlr=TRUE)
 fit.spline.aif <- dcemri.spline(img, time, mask, aif="observed",
-                                aif.observed=aif.fit, nriters=250,
+                                aif.observed=aif, nriters=250,
                                 nlr=TRUE)
 
 plot(breast$ktrans, fit.spline$ktrans, xlim=c(0,1), ylim=c(0,1),
@@ -108,7 +106,7 @@ plot(breast$ktrans, fit.spline$ktrans, xlim=c(0,1), ylim=c(0,1),
      ylab=expression(paste("Estimated ", K^{trans})))
 points(breast$ktrans, fit.spline.aif$ktrans, pch=2)
 abline(0, 1, lwd=1.5, col="red")
-legend("right", c("fritz.hansen", "orton.exp"), pch=1:2)
+legend("right", c("fritz.hansen", "observed"), pch=1:2)
 
 cbind(breast$ktrans, fit.spline$ktrans[,,1], fit.spline.aif$ktrans[,,1])
 }

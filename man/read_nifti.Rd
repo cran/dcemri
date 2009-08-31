@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: read_nifti.Rd 115 2009-08-12 16:27:14Z bjw34032 $
+% $Id: read_nifti.Rd 191 2009-08-25 15:12:31Z bjw34032 $
 
 \name{Read NIfTI}
 \alias{read.nifti.hdr}
@@ -15,7 +15,7 @@
 read.nifti.hdr(fname, onefile=TRUE, gzipped=TRUE, verbose=FALSE,
                warn=-1)
 read.nifti.img(fname, onefile=TRUE, gzipped=TRUE, verbose=FALSE,
-               warn=-1)
+               warn=-1, ignoreQform=FALSE, ignoreSform=FALSE)
 }
 \arguments{
   \item{fname}{Pathname of the NIfTI file(s).}
@@ -26,6 +26,10 @@ read.nifti.img(fname, onefile=TRUE, gzipped=TRUE, verbose=FALSE,
     allows text-based feedback during execution of the function.}
   \item{warn}{is a number to regulate the display of warnings (default =
     -1).  See \code{options} for more details.}
+  \item{ignoreQform}{is a logical variable (default = \code{FALSE}) that
+    ignores any \sQuote{qform} infomration in the NIfTI header.}
+  \item{ignoreSform}{is a logical variable (default = \code{FALSE}) that
+    ignores any \sQuote{sform} infomration in the NIfTI header.}
 }
 \value{
   \code{read.nifti.hdr} returns a list containing all the fields from

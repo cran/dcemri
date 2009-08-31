@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 % 
-% $Id: read.Rd 112 2009-08-12 13:34:53Z bjw34032 $
+% $Id: read.Rd 191 2009-08-25 15:12:31Z bjw34032 $
 
 \name{Read Headers and Images}
 \alias{read.hdr}
@@ -13,8 +13,8 @@
   array from a binary file in ANALYZE or NIfTI formats.
 }
 \usage{
-read.hdr(fname, verbose=FALSE)
-read.img(fname, verbose=FALSE)
+read.hdr(fname, verbose=FALSE, warn=-1)
+read.img(fname, verbose=FALSE, warn=-1, ...)
 make.hdr(X, Y, Z, T, datatype, type)
 }
 \arguments{
@@ -30,6 +30,10 @@ make.hdr(X, Y, Z, T, datatype, type)
       \dQuote{float64}.}
   \item{type}{is a character string declaring either the Analyze or
     NIfTI format (default = \code{analyze}).}
+  \item{warn}{is a number to regulate the display of warnings (default =
+    -1).  See \code{options} for more details.}
+  \item{...}{is for additional parameters that may be passed to
+    \code{read.nifti.img}.}
 }
 \details{
   The function \code{read.hdr} decides whether the input file should be
@@ -55,8 +59,8 @@ make.hdr(X, Y, Z, T, datatype, type)
   NIfTI-1 \url{http://nifti.nimh.nih.gov/}
 }
 \seealso{
+  \code{\link{read.analyze.hdr}}, \code{\link{read.nifti.hdr}},
   \code{\link{read.analyze.img}}, \code{\link{read.nifti.img}},
-  \code{\link{write.analyze.img}}, \code{\link{write.nifti.img}}
 }
 % \examples{}
 \author{Brandon Whitcher, Volker Schmid}

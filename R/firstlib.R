@@ -29,8 +29,15 @@
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
+## $Id: firstlib.R 191 2009-08-25 15:12:31Z bjw34032 $
 ##
 
 .First.lib <- function(lib, pkg) { 
-  library.dynam("dcemri", pkg, lib)  
+  library.dynam(pkg, pkg, lib)  
+}
+
+.onAttach <- function (lib, pkg) {
+  cat("dcemri: A Package for Medical Image Analysis (version = ",
+      as.character(sessionInfo()$otherPkgs$dcemri["Version"]), ")",
+      sep="", fill=TRUE)
 }

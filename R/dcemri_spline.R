@@ -29,7 +29,7 @@
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
-## $Id: $
+## $Id: dcemri_spline.R 191 2009-08-25 15:12:31Z bjw34032 $
 ##
 
 dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
@@ -40,8 +40,10 @@ dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
                                  multicore=FALSE, model=NULL, model.func=NULL,
                                  model.guess=NULL, samples=FALSE, B=NULL) {
 
+  ## require("minpack.lm")
+  require("minpack.lm")
   ## Sanity check: conc must not contain any missing values
-  if (sum(is.na(conc)) > 0)
+  if (any(is.na(conc)))
     return(NA)
 
   T <- length(time)
@@ -148,7 +150,8 @@ dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
   for (i in 1:nriters)
     fitted[[i]] <- B%*% beta[,i]
   if (multicore) {
-    require(multicore)
+    ## require("multicore")
+    require("multicore")
     MAX0 <- mclapply(fitted, max)
   } else {
     MAX0 <- lapply(fitted, max)
@@ -166,10 +169,8 @@ dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
     fcn <- function(p, time, x, N.Err, fcall, jcall) {
       (x - do.call("fcall", c(list(time=time), as.list(p))))
     }
-    nls.lm.single <- function(fitted, par,
-      fn, fcall,model,time)
-    {
-      fcall2=fcall
+    nls.lm.single <- function(fitted, par, fn, fcall, model, time) {
+      fcall2 <- fcall
       if (length(fcall) > 1)
 	fcall2 <- fcall[[1]]
       fit <- nls.lm(par=par, fn=fn, fcall=fcall2, time=time, x=fitted,
@@ -184,13 +185,14 @@ dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
     }
 
     if (multicore) {
-      require(multicore)
+      ## require("multicore")
+      require("multicore")
       response <- mclapply(fitted, nls.lm.single, par=model.guess,
-                           fn=fcn, fcall = model.func, model=model,
+                           fn=fcn, fcall=model.func, model=model,
                            time=time-t0)
     } else {
       response <- lapply(fitted, nls.lm.single, par=model.guess,
-                         fn=fcn, fcall = model.func, model=model,
+                         fn=fcn, fcall=model.func, model=model,
                          time=time-t0)
     }
 
@@ -202,11 +204,11 @@ dcemri.spline.single <- function(conc, time, D, time.input, p, rw, knots,
 	TC <- c(TC, response[[i]]$par$TC)
 	ve <- c(ve, response[[i]]$par$ve)
       }
-      parameters <- list("E"=median(E), "F"=median(F),
-                         "TC"=median(TC), "ve"=median(ve))
+      parameters <- list("E"=median(E), "F"=median(F), "TC"=median(TC),
+                         "ve"=median(ve))
       if(samples) 
-	parameters <- list("E.samples"=E, "F.samples"=F,
-                           "TC.samples"=TC, "ve.samples"=ve)
+	parameters <- list("E.samples"=E, "F.samples"=F, "TC.samples"=TC,
+                           "ve.samples"=ve)
     }
     if (model == "weinmann") {
       ktrans <- kep <- NULL
@@ -250,6 +252,9 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
   ## output: list with ktrans, kep, ve, std.error of ktrans and kep
   ##         (ktranserror and keperror)
   ##
+
+  require("splines")
+  if (nlr) require("minpack.lm")
 
   ##function to make precision matrix for random walk
   R <- function(taux,rw) {
@@ -406,7 +411,7 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
                   model.guess=model.guess, samples=samples, B=B)
   }
   else {
-    require(multicore)
+    require("multicore")
     fit <- mclapply(conc.list, FUN=dcemri.spline.single, time=time, D=D,
                     time.input=time.input, p=p, rw=rw, knots=knots, k=k,
                     A=A, nriters=nriters, thin=thin, burnin=burnin,
@@ -429,7 +434,7 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
   for (k in 1:nvoxels)Fp <- c(Fp, fit[[k]]$Fp)
     Fp.img <- array(NA, c(I,J,K))
   Fp.img[img.mask] <- Fp
-  Fp.samples <- array(NA, c(nvoxels,nriters))
+  Fp.samples <- array(NA, c(nvoxels, nriters))
   for (i in 1:nvoxels)
     Fp.samples[i,] <- fit[[k]]$Fp.samples
   if (samples) {
@@ -559,17 +564,32 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
     }
   }
 
-  for (j in 1:p) {
-    beta.med[,,,j][img.mask] <- apply(beta.sample[,j,],1,median)
-    for (i in 1:nriters)
-      beta[,,,j,i][img.mask] <- beta.sample[,j,i]
-  }
 
+  if (I > 1) {
+    for (j in 1:p) {
+      beta.med[,,,j][img.mask] <- apply(beta.sample[,j,], 1, median)
+      for (i in 1:nriters)
+        beta[,,,j,i][img.mask] <- beta.sample[,j,i]
+    }
+  } else {
+    for (j in 1:p) {
+      beta.med[,,,j][img.mask] <- median(beta.sample[,j,])
+      for (i in 1:nriters)
+        beta[,,,j,i][img.mask] <- beta.sample[,j,i]
+    }
+  }
+  
   for (j in 1:T) {
-    response.med[,,,j][img.mask] <- apply(response.sample[,j,],1,median)
+    if (I > 1)
+      response.med[,,,j][img.mask] <- apply(response.sample[,j,], 1, median)
+    if (I == 1)
+      response.med[,,,j][img.mask] <- median(response.sample[,j,])
     for (i in 1:nriters)
       response[,,,j,i][img.mask] <- response.sample[,j,i]
-    fitted.med[,,,j][img.mask] <- apply(fitted.sample[,j,],1,median)
+    if (I > 1)
+      fitted.med[,,,j][img.mask] <- apply(fitted.sample[,j,], 1, median)
+    if (I == 1)
+      fitted.med[,,,j][img.mask] <- median(fitted.sample[,j,])
     for (i in 1:nriters)
       fitted[,,,j,i][img.mask] <- fitted.sample[,j,i]
   }
@@ -582,8 +602,9 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
   if (nlr) {
     switch (model,
             weinmann = { return.list[["kep"]] <- kep.med }, 
-            AATH = { return.list <- c(return.list,
-                                      list("E"=E.med, "F"=F.med, "TC"=TC.med)) })
+            AATH = { return.list <-
+                       c(return.list, list("E"=E.med, "F"=F.med,
+                                           "TC"=TC.med)) })
     return.list[["ktrans"]] <- ktrans.med
     return.list[["ve"]] <- ve.med
     if (samples) {
@@ -591,8 +612,9 @@ dcemri.spline <- function(conc, time, img.mask, time.input=time,
       return.list[["ve.sample"]] <- ve
       switch (model,
               weinmann = { return.list[["kep.samples"]] <- kep },
-              AATH = { return.list <- c(return.list,
-                                        list("E.samples"=E, "F.samples"=F, "TC.samples"=TC)) })
+              AATH = { return.list <-
+                         c(return.list, list("E.samples"=E, "F.samples"=F,
+                                             "TC.samples"=TC)) })
     }
   } 
   if (samples)

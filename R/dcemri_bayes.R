@@ -29,11 +29,11 @@
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
-## $Id: $
+## $Id: dcemri_bayes.R 191 2009-08-25 15:12:31Z bjw34032 $
 ##
 
-dcemri.bayes.single <- function(conc, time, nriters=7000, thin=10,
-                                burnin=2000, tune=267, tau.gamma=1,
+dcemri.bayes.single <- function(conc, time, nriters=3500, thin=3,
+                                burnin=500, tune=267, tau.gamma=1,
                                 tau.theta=1, ab.vp=c(1,19),
                                 ab.tauepsilon=c(1,1/1000), aif.model=0,
                                 aif.parameter=c(2.4,0.62,3,0.016), vp=1) {
@@ -52,7 +52,7 @@ dcemri.bayes.single <- function(conc, time, nriters=7000, thin=10,
                     as.double(ab.vp),
                     as.double(ab.tauepsilon),
                     as.double(c(aif.model, aif.parameter)),
-                    as.double(vp),
+                    as.integer(vp),
                     as.double(time),
                     as.integer(length(time)),
                     as.double(rep(0,n)),
@@ -66,11 +66,44 @@ dcemri.bayes.single <- function(conc, time, nriters=7000, thin=10,
 }
 
 dcemri.bayes <- function(conc, time, img.mask, model="extended",
-                         aif=NULL, user=NULL, nriters=9500, thin=30,
-                         burnin=2000, tune=267, tau.ktrans=1,
+                         aif=NULL, user=NULL, nriters=3500, thin=3,
+                         burnin=500, tune=267, tau.ktrans=1,
                          tau.kep=tau.ktrans, ab.vp=c(1,19),
                          ab.tauepsilon=c(1,1/1000), samples=FALSE,
                          multicore=FALSE, verbose=FALSE, ...) {
+
+  ## dcemri.bayes - a function for fitting 1-compartment PK models to
+  ## DCE-MRI images using Bayes inference
+  ##
+  ## authors: Volker Schmid, Brandon Whitcher
+  ##
+  ## input:
+  ##        conc: array of Gd concentration,
+  ##        time: timepoints of aquisition,
+  ##        img.mask: array of voxels to fit,
+  ##        D(=0.1): Gd dose in mmol/kg,
+  ##        model: AIF... "weinman" or "parker",
+  ##
+  ## output: list with ktrans, kep, ve, std.error of ktrans and kep
+  ##         (ktranserror and keperror), samples if samples=TRUE
+  ##
+
+  if (nriters < thin)
+    stop("Please check settings for nriters")
+  if (burnin < 0)
+    stop("Please check settings for burnin")
+  if (thin < 1)
+    stop("Please check settings for thin")
+  if (tune < 50)
+    stop("Please check settings for tune")
+
+  if (burnin < tune) {
+    burnin <- tune
+    nriters <- nriters + tune
+  } else {
+    nriters <- nriters + burnin
+  }
+  
   aif <- switch(model,
                 weinmann = ,
                 extended = {
@@ -95,22 +128,6 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
                 },
                 stop("Unknown model: " + model, call.=FALSE))
 
-  ## dcemri.bayes - a function for fitting 1-compartment PK models to
-  ## DCE-MRI images using Bayes inference
-  ##
-  ## authors: Volker Schmid, Brandon Whitcher
-  ##
-  ## input:
-  ##        conc: array of Gd concentration,
-  ##        time: timepoints of aquisition,
-  ##        img.mask: array of voxels to fit,
-  ##        D(=0.1): Gd dose in mmol/kg,
-  ##        model: AIF... "weinman" or "parker",
-  ##
-  ## output: list with ktrans, kep, ve, std.error of ktrans and kep
-  ##         (ktranserror and keperror), samples if samples=TRUE
-  ##
-
   mod <- model
   nvoxels <- sum(img.mask)
   I <- nrow(conc) ;  J <- ncol(conc) ;  K <- nsli(conc)
@@ -123,6 +140,8 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
     }
   }
 
+  img.mask <- array(img.mask,c(I,J,K))
+ 
   if (verbose) cat("  Deconstructing data...", fill=TRUE)
   conc.mat <- matrix(conc[img.mask], nvoxels)
   conc.mat[is.na(conc.mat)] <- 0
@@ -158,9 +177,9 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
 
   ## translate "model" to "aif.model" and "vp.do"
   switch(model,
-         weinmann = { aif.model <- 0 ; vp.do <- FALSE },
-         extended = { aif.model <- 0 ; vp.do <- TRUE },
-         orton.exp = { aif.model <- 1 ; vp.do <- TRUE },
+         weinmann = { aif.model <- 0 ; vp.do <- 0 },
+         extended = { aif.model <- 0 ; vp.do <- 1 },
+         orton.exp = { aif.model <- 1 ; vp.do <- 1 },
          stop("Model is not supported."))
 
   ktrans <- kep <- list(par=rep(NA, nvoxels), error=rep(NA, nvoxels))
@@ -168,9 +187,8 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
   Vp <- list(par=rep(NA, nvoxels), error=rep(NA, nvoxels))
   if (samples) {
     sigma2.samples <- ktrans.samples <- kep.samples <- c()
-    if (mod %in% c("extended", "orton.exp", "orton.cos")) {
+    if (mod %in% c("extended", "orton.exp", "orton.cos"))
       Vp.samples <- c()
-    }
   }
 
   if (verbose) cat("  Estimating the kinetic parameters...", fill=TRUE)
@@ -183,13 +201,15 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
     fit <- lapply(conc.list, FUN=dcemri.bayes.single,
                   time=time, nriters=nriters, thin=thin, burnin=burnin,
                   tune=tune, ab.vp=ab.vp, ab.tauepsilon=ab.tauepsilon,
-                  aif.model=aif.model, aif.parameter=aif.parameter)
+                  aif.model=aif.model, aif.parameter=aif.parameter,
+		  vp=vp.do)
   } else {
-    require(multicore)
+    require("multicore")
     fit <- mclapply(conc.list, FUN=dcemri.bayes.single,
                   time=time, nriters=nriters, thin=thin, burnin=burnin,
                   tune=tune, ab.vp=ab.vp, ab.tauepsilon=ab.tauepsilon,
-                  aif.model=aif.model, aif.parameter=aif.parameter)
+                  aif.model=aif.model, aif.parameter=aif.parameter, 
+                  vp=vp.do)
   }
 
   if (verbose) cat("  Reconstructing results...", fill=TRUE)
@@ -202,13 +222,11 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
     if (mod %in% c("extended", "orton.exp", "orton.cos")) {
       Vp$par[k] <- median(fit[[k]]$vp)
       Vp$error[k] <- sqrt(var(fit[[k]]$vp))
-      if (samples) {
+      if (samples)
 	Vp.samples <- c(Vp.samples,fit[[k]]$v)
-      }
     }
     sigma2[k] <- median(fit[[k]]$sigma2)
-    if (samples)
-    {
+    if (samples) {
       ktrans.samples <- c(ktrans.samples,fit[[k]]$ktrans)
       kep.samples <- c(kep.samples,fit[[k]]$kep)
       sigma2.samples <- c(sigma2.samples,fit[[k]]$sigma2)
@@ -218,11 +236,11 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
   A <- B <- array(NA, c(I,J,K))
   A[img.mask] <- ktrans$par
   B[img.mask] <- ktrans$error
-  ktrans.out <- list(par = A, error = B)
+  ktrans.out <- list(par=A, error=B)
   A <- B <- array(NA, c(I,J,K))
   A[img.mask] <- kep$par
   B[img.mask] <- kep$error
-  kep.out <- list(par = A, error = B)
+  kep.out <- list(par=A, error=B)
 
   if (mod %in% c("extended", "orton.exp", "orton.cos")) {
     A <- B <- array(NA, c(I,J,K))
@@ -236,40 +254,39 @@ dcemri.bayes <- function(conc, time, img.mask, model="extended",
   sigma2.out <- A
 
   if (samples) {
-    
     extract.samples <- function(sample, I, J, K, NRI) {
       A <- array(NA, c(I,J,K,NRI))
-      count = -1
+      count <- -1
       for (i in 1:I) {
 	for (j in 1:J) {
 	  for (k in 1:K) {
 	    if (img.mask[i,j,k]) {
-	      count = count + 1
+	      count <- count + 1
 	      A[i,j,k,] <- sample[(1:NRI) + count*NRI]
 	    }
-	    return(A)
 	  }
 	}
       }
+      return(A)
     }
-    
     NRI <- length(ktrans.samples) / length(ktrans$par)
-
-    ktrans.out <- list(par = ktrans.out$par, error=ktrans.out$error,
-      samples = extract.samples(ktrans.samples,I,J,K,NRI))
-    kep.out <- list(par = kep.out$par, error=kep.out$error,
-      samples= extract.samples(kep.samples,I,J,K,NRI))
-
-    if (mod %in% c("extended", "orton.exp", "orton.cos")) {
-      Vp.out <- list(par = Vp.out$par, error=Vp.out$error,
-                     samples = extract.samples(Vp.samples, I, J, K, NRI))
-    }
+    ktrans.out <- list(par=ktrans.out$par,
+                       error=ktrans.out$error,
+                       samples=extract.samples(ktrans.samples,I,J,K,NRI))
+    kep.out <- list(par=kep.out$par,
+                    error=kep.out$error,
+                    samples=extract.samples(kep.samples,I,J,K,NRI))
+    if (mod %in% c("extended", "orton.exp", "orton.cos"))
+      Vp.out <- list(par=Vp.out$par,
+                     error=Vp.out$error,
+                     samples=extract.samples(Vp.samples, I, J, K, NRI))
     sigma2.samples <- extract.samples(sigma2.samples, I, J, K, NRI)
   }
 
   returnable <- list(ktrans=ktrans.out$par, kep=kep.out$par,
-    ktranserror=ktrans.out$error, keperror=kep.out$error, 
-    ve=ktrans.out$par/kep.out$par, sigma2=sigma2.out, time=time)
+                     ktranserror=ktrans.out$error, keperror=kep.out$error, 
+                     ve=ktrans.out$par/kep.out$par, sigma2=sigma2.out,
+                     time=time)
 
   if (mod %in% c("extended", "orton.exp", "orton.cos")) {
     returnable[["vp"]] <- Vp.out$par

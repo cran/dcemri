@@ -125,29 +125,27 @@ Successful execution of the command:
 mni <- read.img("avg152T1_LR_nifti.nii.gz")
 dim(mni)
 @ 
-<<figure1,echo=FALSE,results=hide>>=
+<<figure1-png,echo=FALSE,results=hide>>=
 png(filename="avg152T1_LR_nifti.png", width=400, height=400)
-X <- nrow(mni) ; Y <- ncol(mni) ; Z <- nsli(mni)
+@ 
+<<figure1-code>>=
+X <- nrow(mni)
+Y <- ncol(mni)
+Z <- nsli(mni)
 zrange <- range(mni)
 par(mfrow=c(10,10), mar=rep(0,4))
 for (z in 1:Z) {
   image(1:X, 1:Y, mni[,,z,1], zlim=zrange, col=grey(0:64/64),
         xlab="", ylab="", axes=FALSE)
 }
+@ 
+<<figure1-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
-produces a 4D array of the image data, with the default NIfTI axes.
-This may be displayed in a $10{\times}10$ grid of images
-(Figure~\ref{fig:avg152T1_LR_nifti}) using the below R code.
 
-<<avg152T1_LR_nifti-example,eval=FALSE>>=
-zrange <- range(mni)
-par(mfrow=c(10,10), mar=rep(0,4))
-for (z in 1:Z) {
-  image(1:nrow(mni), 1:ncol(mni), mni[,,z,1], zlim=zrange, col=grey(0:64/64),
-        xlab="", ylab="", axes=FALSE)
-}
-@
+produces a 4D array of the image data, with the default NIfTI axes,
+and is displayed on a $10{\times}10$ grid of images
+(Figure~\ref{fig:avg152T1_LR_nifti}).
 
 \begin{figure}[!htbp]
   \centering
@@ -166,17 +164,23 @@ Successful execution of the command
 mni <- read.img("avg152T1_RL_nifti.nii.gz")
 dim(mni)
 @ 
-<<figure2,echo=FALSE,results=hide>>=
+<<figure2-png,echo=FALSE,results=hide>>=
 png(filename="avg152T1_RL_nifti.png", width=400, height=400)
-X <- nrow(mni) ; Y <- ncol(mni) ; Z <- nsli(mni)
+@ 
+<<figure2-code>>=
+X <- nrow(mni)
+Y <- ncol(mni)
+Z <- nsli(mni)
 zrange <- range(mni)
 par(mfrow=c(10,10), mar=rep(0,4))
 for (z in 1:Z) {
   image(1:X, 1:Y, mni[,,z,1], zlim=zrange, col=grey(0:64/64),
         xlab="", ylab="", axes=FALSE)
 }
+<<figure2-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
+
 produces a 4D array of the image data that may be displayed in a
 $10{\times}10$ grid of images (Figure~\ref{fig:avg152T1_RL_nifti}).
 
@@ -206,9 +210,14 @@ command
 ffd <- read.img("filtered_func_data.nii.gz")
 dim(ffd)
 @ 
-<<figure3,echo=FALSE,results=hide>>=
+<<figure3-png,echo=FALSE,results=hide>>=
 png(filename="ffd.png", width=400, height=400)
-X <- nrow(ffd) ; Y <- ncol(ffd) ; Z <- nsli(ffd) ; W <- ntim(ffd)
+@ 
+<<figure3-code>>=
+X <- nrow(ffd)
+Y <- ncol(ffd)
+Z <- nsli(ffd)
+W <- ntim(ffd)
 zrange <- range(ffd)
 w <- 1
 par(mfrow=c(5,5), mar=rep(0,4))
@@ -216,8 +225,11 @@ for (z in 1:Z) {
   image(1:X, 1:Y, ffd[,,z,w], zlim=zrange,
         col=grey(0:64/64), xlab="", ylab="", axes=FALSE)
 }
+@ 
+<<figure3-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
+
 produces a four-dimensional (4D) array of imaging data that may be
 displayed in a $5{\times}5$ grid of images (Figure~\ref{fig:ffd}).
 The first three dimensions are spatial locations of the voxel (volume
@@ -246,16 +258,19 @@ Successful execution of the command
 zstat1 <- read.img("zstat1.nii.gz")
 dim(zstat1)
 @ 
-<<figure4,echo=FALSE,results=hide>>=
+<<figure4-png,echo=FALSE,results=hide>>=
 png("ffd_zstat1.png", width=400, height=400)
+@ 
+<<figure4-code>>=
 par(mfrow=c(5,5), mar=rep(0,4))
 w <- 1
 for (z in 1:Z) {
   image(1:X, 1:Y, ffd[,,z,w], zlim=zrange, col=grey(0:64/64), 
         xlab="", ylab="", axes=FALSE)
-  image(1:X, 1:Y, ifelse(abs(zstat1[,,z,1]) > 4, zstat1[,,z,1], NA),
+  image(1:X, 1:Y, ifelse(abs(zstat1[,,z,1]) > 5, zstat1[,,z,1], NA),
         zlim=range(zstat1), col=hotmetal(), add=TRUE)
 }
+<<figure4-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
 produces a 4D array of parameter estimates (essentially coefficients
@@ -367,18 +382,23 @@ sdam120 <- read.img("SDAM_ep2d_120deg_26slc.nii.gz")[,,1:26,]
 dim(sdam120)
 sdam.image <- rowMeans(dam(sdam60, sdam120, 60), dims=3)
 mask <- rowSums(sdam60, dims=3) > 500
+dim(mask)
 @ 
-<<figure5,echo=FALSE,results=hide>>=
+<<figure5-png,echo=FALSE,results=hide>>=
+png("sdam.png", width=400, height=400)
+@ 
+<<figure5-code>>=
 zi <- 10:13
 w <- 5
 SDAM <- read.img("SDAM_smooth.nii.gz")[,,1:26,,drop=TRUE]
-png("sdam.png", width=400, height=400)
 par(mfrow=c(2,2), mar=rep(0,4))
 for (z in zi) {
   image(sdam120[,,z,w], col=grey(0:128/128), xlab="", ylab="", axes=FALSE)
   image(ifelse(mask[,,z], SDAM[,,z], 0), zlim=c(.5,1.5),
         col=tim.colors(), add=TRUE)
 }
+@ 
+<<figure5-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
 
@@ -408,34 +428,37 @@ multiplicative factor, derived from the saturated double-angle method,
 is used to produce a spatially-varying flip-angle map and input into
 the appropriate function.
 
-<<t1preprocessing,echo=FALSE>>=
+<<t1estimation>>=
 fnames <- c("fl3d_vibe-5deg","fl3d_vibe-10deg","fl3d_vibe-20deg",
             "fl3d_vibe-25deg","fl3d_vibe-15deg")
 alpha <- c(5,10,20,25,15)
 nangles <- length(alpha)
-X <- Y <- 64 ; Z <- 26
+X <- Y <- 64
+Z <- 26
 flip <- fangles <- array(0, c(X,Y,Z,nangles))
 for (w in 1:nangles) {
   vibe <- read.img(fnames[w])
   flip[,,,w] <- vibe
   fangles[,,,w] <- array(alpha[w], c(X,Y,Z))
 }
-@
-<<t1estimation>>=
 TR <- 4.22 / 1000 # seconds
 fanglesB1 <- fangles * array(SDAM, c(X,Y,Z,nangles))
 zi <- 10:13
 mask[,,(! 1:Z %in% zi)] <- FALSE
 R1 <- R1.fast(flip, mask, fanglesB1, TR, verbose=TRUE)
 @ 
-<<figure6,echo=FALSE,results=hide>>=
+<<figure6-png,echo=FALSE,results=hide>>=
 png("t1_phantom.png", width=400, height=400)
+@ 
+<<figure6-code>>=
 par(mfrow=c(2,2), mar=rep(0,4))
 for (z in zi) {
   image(drop(vibe)[,,z], zlim=c(0,1024), col=grey(0:64/64),
         xlab="", ylab="", axes=FALSE)
   image(1/drop(R1$R10)[,,z], zlim=c(0,2.5), col=hotmetal(), add=TRUE)
 }
+@ 
+<<figure6-dev.off,echo=FALSE,results=hide>>=
 dev.off()
 @ 
 
@@ -454,13 +477,13 @@ By defining regions of interest (ROIs) in
 
 <<FSLmask>>=
 pmask <- read.img("t1_phantom_mask.nii.gz")
-dim(pmask)
 pmask[,,c(1:24,26),1] <- pmask[,,25,1] # repeat masked slice (#25) for all slices
+dim(pmask)
 @ 
 
 \begin{figure}[!htbp]
 \begin{center}
-<<figure7,fig=TRUE,echo=FALSE>>=
+<<figure7,fig=TRUE,echo=TRUE>>=
 T1 <- c(.484,.350,1.07,.648,.456,1.07,.660,1.543,1.543,.353)
 par(mfrow=c(1,1), mar=c(5,4,4,2)+.1)
 boxplot(split(1/drop(R1$R10), as.factor(drop(pmask)))[-1], 
@@ -544,7 +567,7 @@ fit.aif <- with(aifparams, aif.orton.exp(buckley$time.min, AB, muB, AG, muG))
 @
 \begin{figure}[!htbp]
 \begin{center}
-<<figure8,fig=TRUE,echo=FALSE>>=
+<<figure8,fig=TRUE,echo=TRUE>>=
 with(buckley, plot(time.min, input, type="l", lwd=2, xlab="Time (minutes)", 
                    ylab=""))
 with(buckley, lines(time.min, fit.aif, lwd=2, col=2))
@@ -613,14 +636,14 @@ fit <- dcemri.lm(img, time, mask, model="orton.exp",
 @ 
 \begin{figure}[!htbp]
 \begin{center}
-<<figure9,fig=TRUE,echo=FALSE>>=
+<<figure9,fig=TRUE,echo=TRUE>>=
 par(mfrow=c(4,4), mar=c(5,4,4,2)/1.25, mex=0.8)
 for (x in 1:nrow(img)) {
   plot(time, img[x,1,1,], ylim=range(img), xlab="Time (minutes)",
        ylab="", main=paste("Series", x))
   kinparams <- with(fit, c(vp[x,1,1], ktrans[x,1,1], kep[x,1,1]))
   lines(time, model.orton.exp(time, aifparams[1:4], kinparams), 
-        lwd=2, col=2)
+        lwd=1.25, col=2)
 }
 @ 
 \end{center}

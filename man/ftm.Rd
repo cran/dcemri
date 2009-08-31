@@ -1,7 +1,7 @@
 % Part of the dcemri package for R
 % Distributed under the BSD license: see dcemri/COPYING
 %
-% $Id: ftm.Rd 109 2009-08-11 09:27:02Z bjw34032 $
+% $Id: ftm.Rd 191 2009-08-25 15:12:31Z bjw34032 $
 
 \name{ftm}
 \alias{ftm}

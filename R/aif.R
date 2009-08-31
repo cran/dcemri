@@ -31,7 +31,7 @@
 ## 
 ##
 ## Time-stamp: <2009-07-14 09:47:30 (bjw34032)>
-## $Id: aif.R 55 2009-08-04 16:20:22Z bjw34032 $
+## $Id: aif.R 191 2009-08-25 15:12:31Z bjw34032 $
 ##
 
 aif.orton.exp <- function(tt, AB, muB, AG, muG) {

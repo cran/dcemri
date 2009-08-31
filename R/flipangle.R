@@ -29,7 +29,7 @@
 ## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## 
-## $Id: flipangle.R 112 2009-08-12 13:34:53Z bjw34032 $
+## $Id: flipangle.R 191 2009-08-25 15:12:31Z bjw34032 $
 
 dam <- function(low, high, low.deg) {
   alpha <- acos(abs(high /(2*low)))
